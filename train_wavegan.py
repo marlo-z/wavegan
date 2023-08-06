@@ -208,7 +208,9 @@ def train(fps, args):
     print('-' * 80)
     print('Training has started. Please use \'tensorboard --logdir={}\' to monitor.'.format(args.train_dir))
     # Train for 25,000 steps
-    while tf.train.get_global_step() <= total_steps:
+    # Issue: get_global_step() returns a Tensor --> cannot be compared using operator <= as with nomla numbers
+    # while tf.train.get_global_step() <= total_steps:
+    for _ in range(total_steps + 1):
       # Train discriminator
       for i in xrange(args.wavegan_disc_nupdates):
         sess.run(D_train_op)

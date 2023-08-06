@@ -184,19 +184,31 @@ def train(fps, args):
   else:
     raise NotImplementedError()
 
-  # Create training ops
+  # Create training operations
+  '''global_step: a variable (created here) that serves as a global counter
+                  for the number of batches went through the network.
+                  (Each batch forward probapages --> generates a loss 
+                  --> back propagates to compute gradient --> update parameters)
+      G_train_op: G's optimizer's minimize operation. Each time G's optimizers updates
+                  the parameters, the global_step counter will be incremented
+      Therefore, # of global steps = # of times G gets updated'''
   G_train_op = G_opt.minimize(G_loss, var_list=G_vars,
       global_step=tf.train.get_or_create_global_step())
   D_train_op = D_opt.minimize(D_loss, var_list=D_vars)
 
-  # Run training
+  # Run training - (Actual Training Loop)
+  '''Using global steps (G steps) as count when to save checkpoint'''
+  total_steps = 25000
+  checkpoint_steps = 500
+  summary_steps = 500
   with tf.train.MonitoredTrainingSession(
       checkpoint_dir=args.train_dir,
-      save_checkpoint_secs=args.train_save_secs,
-      save_summaries_secs=args.train_summary_secs) as sess:
+      save_checkpoint_steps=checkpoint_steps,
+      save_summaries_secs=summary_steps) as sess:
     print('-' * 80)
     print('Training has started. Please use \'tensorboard --logdir={}\' to monitor.'.format(args.train_dir))
-    while True:
+    # Train for 25,000 steps
+    while tf.train.get_global_step() <= total_steps:
       # Train discriminator
       for i in xrange(args.wavegan_disc_nupdates):
         sess.run(D_train_op)
@@ -651,7 +663,7 @@ if __name__ == '__main__':
       raise Exception('Did not find any audio files in specified directory')
     print('Found {} audio files in specified directory'.format(len(fps)))
     infer(args)
-    train(fps, args)
+    train(fps, args)          # --> go to train function
   elif args.mode == 'preview':
     preview(args)
   elif args.mode == 'incept':

@@ -5,6 +5,22 @@ import argparse
 import os
 
 parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    '--logdir',
+    type=str,
+    default='./logdir',
+    help='Where saved checkpoints are stored.'
+)
+
+parser.add_argument(
+    '--outdir',
+    type=str,
+    default='./gen_outputs',
+    help='Where to save generated outputs.'
+)
+
+
 parser.add_argument(
     '--step',
     type=int,
@@ -18,24 +34,31 @@ parser.add_argument(
     help='Number of output wav files to generate.'
 )
 
+parser.add_argument(
+    '--sample_rate',
+    type=int,
+    default=16000,
+    help='Sample rate used to convert vector to wav file.'
+)
+
 args = parser.parse_args()
 step = args.step
 num_examples = args.num_examples
 batch_size = 500
 num_batches = num_examples // batch_size
 
-infer_dir = './logdir/infer'
-checkpoints_dir = './logdir'
-out_dir = './gen_outputs'
-sample_rate = 16000
+checkpoints_dir = args.logdir                           # './logdir'
+infer_dir = os.path.join(checkpoints_dir, 'infer')      # './logdir/infer'
+out_dir = args.outdir                                   # './gen_outputs'
+sample_rate = args.sample_rate                          # default: 16000
 
 
 # Load the graph
 tf.reset_default_graph()
-saver = tf.train.import_meta_graph(os.path.join(infer_dir, 'infer.meta'))
+saver = tf.train.import_meta_graph(os.path.join(infer_dir, 'infer.meta'))       # saver is created from loading a metagraph
 graph = tf.get_default_graph()
 sess = tf.InteractiveSession()
-saver.restore(sess, os.path.join(checkpoints_dir, f'model.ckpt-{step}'))
+saver.restore(sess, os.path.join(checkpoints_dir, f'model.ckpt-{step}'))        # then, the graph (saver) restores the values saved in model.ckpt-xxx
 
 print(f'Loaded model from saved checkpoint after {step} steps.')
 
